@@ -354,7 +354,6 @@ toggleControlsBtn.addEventListener('click', () => {
 });
 
 document.addEventListener('keydown', e => {
-  if (e.code === 'Escape' && document.activeElement === startLevelSelect) return;
   if (e.code === 'KeyP' || e.code === 'Escape') { togglePause(); return; }
   if (paused || gameOver) return;
   switch (e.code) {
