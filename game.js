@@ -31,7 +31,7 @@ const LINE_SCORES = [0, 100, 300, 500, 800];
 const SKINS = {
   retro: {
     colors: COLORS,
-    boardBg: null,
+    boardBgVar: null,
     drawBlock(context, x, y, colorIndex, size, alpha) {
       const color = this.colors[colorIndex];
       context.globalAlpha = alpha ?? 1;
@@ -44,7 +44,7 @@ const SKINS = {
   },
   neon: {
     colors: [null, '#00e5ff', '#fff176', '#e040fb', '#69f0ae', '#ff5252', '#448aff', '#ffab40'],
-    boardBg: '#050508',
+    boardBgVar: '--neon-board-bg',
     drawBlock(context, x, y, colorIndex, size, alpha) {
       const color = this.colors[colorIndex];
       context.save();
@@ -62,7 +62,7 @@ const SKINS = {
   },
   pastel: {
     colors: [null, '#b3e5fc', '#fff9c4', '#e1bee7', '#c8e6c9', '#ffcdd2', '#bbdefb', '#ffe0b2'],
-    boardBg: null,
+    boardBgVar: null,
     drawBlock(context, x, y, colorIndex, size, alpha) {
       const color = this.colors[colorIndex];
       const px = x * size + 2, py = y * size + 2, s = size - 4, r = Math.min(6, s / 2);
@@ -89,7 +89,7 @@ const SKINS = {
   },
   pixel: {
     colors: COLORS,
-    boardBg: null,
+    boardBgVar: null,
     drawBlock(context, x, y, colorIndex, size, alpha) {
       const color = this.colors[colorIndex];
       const px = x * size + 1, py = y * size + 1, s = size - 2;
@@ -146,8 +146,16 @@ themeToggle.addEventListener('change', () => {
   localStorage.setItem(THEME_KEY, theme);
 });
 
+function isValidSkin(skin) {
+  return Object.prototype.hasOwnProperty.call(SKINS, skin);
+}
+
+function getSkin() {
+  return isValidSkin(currentSkin) ? SKINS[currentSkin] : SKINS.retro;
+}
+
 function applySkin(skin, redraw = true) {
-  currentSkin = SKINS[skin] ? skin : 'retro';
+  currentSkin = isValidSkin(skin) ? skin : 'retro';
   if (skinSelect) skinSelect.value = currentSkin;
   if (redraw && board) {
     draw();
@@ -165,15 +173,17 @@ function initSkin() {
   applySkin(saved, false);
 }
 
-skinSelect.addEventListener('change', () => {
-  const skin = skinSelect.value;
-  try {
-    localStorage.setItem(SKIN_KEY, skin);
-  } catch (e) {
-    // ignore storage errors (e.g. private mode)
-  }
-  applySkin(skin);
-});
+if (skinSelect) {
+  skinSelect.addEventListener('change', () => {
+    const skin = skinSelect.value;
+    try {
+      localStorage.setItem(SKIN_KEY, skin);
+    } catch (e) {
+      // ignore storage errors (e.g. private mode)
+    }
+    applySkin(skin);
+  });
+}
 
 function createBoard() {
   return Array.from({ length: ROWS }, () => new Array(COLS).fill(0));
@@ -292,8 +302,13 @@ function updateHUD() {
 
 function drawBlock(context, x, y, colorIndex, size, alpha) {
   if (!colorIndex) return;
-  const skin = SKINS[currentSkin] || SKINS.retro;
-  skin.drawBlock(context, x, y, colorIndex, size, alpha);
+  getSkin().drawBlock(context, x, y, colorIndex, size, alpha);
+}
+
+function fillBoardBg(context, width, height, skin) {
+  if (!skin.boardBgVar) return;
+  context.fillStyle = getComputedStyle(document.body).getPropertyValue(skin.boardBgVar).trim();
+  context.fillRect(0, 0, width, height);
 }
 
 function drawGrid() {
@@ -315,11 +330,7 @@ function drawGrid() {
 
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  const skin = SKINS[currentSkin] || SKINS.retro;
-  if (skin.boardBg) {
-    ctx.fillStyle = skin.boardBg;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-  }
+  fillBoardBg(ctx, canvas.width, canvas.height, getSkin());
   drawGrid();
 
   // board
@@ -345,11 +356,7 @@ function draw() {
 function drawNext() {
   const NB = 30;
   nextCtx.clearRect(0, 0, nextCanvas.width, nextCanvas.height);
-  const skin = SKINS[currentSkin] || SKINS.retro;
-  if (skin.boardBg) {
-    nextCtx.fillStyle = skin.boardBg;
-    nextCtx.fillRect(0, 0, nextCanvas.width, nextCanvas.height);
-  }
+  fillBoardBg(nextCtx, nextCanvas.width, nextCanvas.height, getSkin());
   const shape = next.shape;
   const offX = Math.floor((4 - shape[0].length) / 2);
   const offY = Math.floor((4 - shape.length) / 2);
