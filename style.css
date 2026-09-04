@@ -24,6 +24,7 @@
   --btn-color: #0f0f17;
   --btn-hover: #9bbdff;
   --grid-color: #22222e;
+  --neon-board-bg: #050508;
 }
 
 body.light-mode {
@@ -46,6 +47,7 @@ body.light-mode {
   --btn-color: #ffffff;
   --btn-hover: #5c78e0;
   --grid-color: #d8d8e6;
+  --neon-board-bg: #1c1c28;
 }
 
 body {
@@ -165,6 +167,22 @@ body {
 
 .theme-switch input:checked + .slider::before {
   transform: translateX(18px);
+}
+
+/* ---- Skin select ---- */
+.skin-select {
+  background: var(--kbd-bg);
+  color: var(--text);
+  border: 1px solid var(--kbd-border);
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.skin-select:focus {
+  outline: 1px solid var(--value-color);
 }
 
 /* ---- Controles ---- */
