@@ -60,6 +60,7 @@ const resetScoresOverlayBtn = document.getElementById('reset-scores-overlay');
 let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
 let started = false;
 let combo = 0;
+let bestComboThisGame = 0;
 let pendingGameOverData = null;
 
 const THEME_KEY = 'tetris-theme';
@@ -154,7 +155,7 @@ function resetHighScores() {
   } catch {}
   renderStartScreen();
   if (pendingGameOverData) {
-    pendingGameOverData = { top: [], bestCombo: combo, maxLines: lines };
+    pendingGameOverData = { top: [], bestCombo: bestComboThisGame, maxLines: lines };
   } else if (gameOver && !overlayRecords.classList.contains('hidden')) {
     const data = loadHighScores();
     renderRecordsList(overlayRecordsList, data.top, -1);
@@ -264,6 +265,7 @@ function clearLines() {
   }
   if (cleared) {
     combo++;
+    if (combo > bestComboThisGame) bestComboThisGame = combo;
     lines += cleared;
     score += (LINE_SCORES[cleared] || 0) * level;
     level = Math.floor(lines / 10) + 1;
@@ -392,7 +394,7 @@ function endGame() {
   overlayScore.textContent = `Puntuación: ${score.toLocaleString()}`;
 
   const data = loadHighScores();
-  if (combo > data.bestCombo) data.bestCombo = combo;
+  if (bestComboThisGame > data.bestCombo) data.bestCombo = bestComboThisGame;
   if (lines > data.maxLines) data.maxLines = lines;
 
   resetScoresOverlayBtn.classList.remove('hidden');
@@ -461,6 +463,7 @@ function init() {
   paused = false;
   gameOver = false;
   combo = 0;
+  bestComboThisGame = 0;
   started = true;
   dropInterval = 1000;
   dropAccum = 0;
@@ -502,7 +505,10 @@ document.addEventListener('keydown', e => {
   updateHUD();
 });
 
-restartBtn.addEventListener('click', init);
+restartBtn.addEventListener('click', () => {
+  if (pendingGameOverData) submitHighScoreName();
+  init();
+});
 
 initTheme();
 showStartScreen();
